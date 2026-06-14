@@ -2,13 +2,19 @@
 
 A desktop PDF reader built with Python, PyQt6, and PyMuPDF.
 
-## Phase 1 Features
+## Implemented Features
 
 - Open PDF files
 - Render PDF pages
 - Navigate to the next page
 - Navigate to the previous page
 - Display current page and total page count
+- Save the last read page for each PDF
+- Restore the last read page when reopening a PDF
+
+## User Data
+
+Reading progress is stored in `data/progress.json`. Progress records are keyed by the stable `document_id` generated from each PDF's resolved file path.
 
 ## Setup
 

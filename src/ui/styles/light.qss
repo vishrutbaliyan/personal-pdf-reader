@@ -1,0 +1,45 @@
+QMainWindow {
+    background: #f5f7fb;
+}
+
+#ReaderToolbar {
+    background: #ffffff;
+    border-bottom: 1px solid #d9dee8;
+}
+
+QPushButton {
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-weight: 600;
+}
+
+QPushButton:hover {
+    background: #1d4ed8;
+}
+
+QPushButton:disabled {
+    background: #cbd5e1;
+    color: #64748b;
+}
+
+QLabel {
+    color: #1e293b;
+    font-size: 13px;
+}
+
+#DocumentTitle {
+    color: #475569;
+    font-weight: 600;
+}
+
+#PdfViewer {
+    background: #eef2f7;
+}
+
+#PdfScrollArea {
+    background: #eef2f7;
+    border: none;
+}

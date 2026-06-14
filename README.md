@@ -11,10 +11,15 @@ A desktop PDF reader built with Python, PyQt6, and PyMuPDF.
 - Display current page and total page count
 - Save the last read page for each PDF
 - Restore the last read page when reopening a PDF
+- Add bookmarks for PDF pages
+- View bookmarks for the active PDF
+- Jump to a bookmarked page
 
 ## User Data
 
 Reading progress is stored in `data/progress.json`. Progress records are keyed by the stable `document_id` generated from each PDF's resolved file path.
+
+Bookmarks are stored in `data/bookmarks.json`. Bookmark lists are keyed by the same `document_id`, and each bookmark stores its page index, label, and creation timestamp.
 
 ## Setup
 

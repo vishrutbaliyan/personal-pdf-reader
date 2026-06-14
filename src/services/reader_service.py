@@ -56,6 +56,13 @@ class ReaderService:
 
         return self._go_to_page(self._current_page_index - 1)
 
+    def go_to_page(self, page_index: int) -> QImage:
+        document = self._require_document()
+        if page_index < 0 or page_index >= document.page_count:
+            raise PdfReaderError("Page number is outside the document range.")
+
+        return self._go_to_page(page_index)
+
     def can_go_next(self) -> bool:
         return self._current_document is not None and self._current_page_index < self.total_pages - 1
 

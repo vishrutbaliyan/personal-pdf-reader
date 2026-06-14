@@ -43,3 +43,31 @@ QLabel {
     background: #eef2f7;
     border: none;
 }
+
+#BookmarksPanel {
+    background: #ffffff;
+    border-left: 1px solid #d9dee8;
+}
+
+#PanelHeading {
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+#BookmarksList {
+    background: #ffffff;
+    border: 1px solid #d9dee8;
+    border-radius: 6px;
+    padding: 4px;
+}
+
+#BookmarksList::item {
+    color: #1e293b;
+    padding: 8px;
+}
+
+#BookmarksList::item:selected {
+    background: #dbeafe;
+    color: #1e3a8a;
+}

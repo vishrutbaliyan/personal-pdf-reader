@@ -4,6 +4,7 @@ from pathlib import Path
 
 from PyQt6.QtGui import QImage
 
+from src.config.app_config import DEFAULT_ZOOM_FACTOR, MAX_ZOOM_FACTOR, MIN_ZOOM_FACTOR, ZOOM_STEP
 from src.models.pdf_document import PdfDocument
 from src.services.exceptions import PdfReaderError
 from src.services.pdf_service import PdfService
@@ -22,6 +23,7 @@ class ReaderService:
         self._progress_store = progress_store or ProgressStore()
         self._current_document: PdfDocument | None = None
         self._current_page_index = 0
+        self._zoom_factor = DEFAULT_ZOOM_FACTOR
 
     @property
     def current_document(self) -> PdfDocument | None:
@@ -34,6 +36,10 @@ class ReaderService:
     @property
     def total_pages(self) -> int:
         return self._current_document.page_count if self._current_document else 0
+
+    @property
+    def zoom_factor(self) -> float:
+        return self._zoom_factor
 
     def open_document(self, file_path: Path) -> QImage:
         self._current_document = self._pdf_service.open_pdf(file_path)
@@ -63,6 +69,15 @@ class ReaderService:
 
         return self._go_to_page(page_index)
 
+    def zoom_in(self) -> QImage:
+        return self._set_zoom(self._zoom_factor + ZOOM_STEP)
+
+    def zoom_out(self) -> QImage:
+        return self._set_zoom(self._zoom_factor - ZOOM_STEP)
+
+    def reset_zoom(self) -> QImage:
+        return self._set_zoom(DEFAULT_ZOOM_FACTOR)
+
     def can_go_next(self) -> bool:
         return self._current_document is not None and self._current_page_index < self.total_pages - 1
 
@@ -74,6 +89,9 @@ class ReaderService:
             return "Page - / -"
         return f"Page {self._current_page_index + 1} / {self.total_pages}"
 
+    def zoom_label(self) -> str:
+        return f"{round(self._zoom_factor * 100)}%"
+
     def close(self) -> None:
         self._pdf_service.close()
         self._current_document = None
@@ -81,7 +99,7 @@ class ReaderService:
 
     def _render_current_page(self) -> QImage:
         self._require_document()
-        return self._pdf_service.render_page(self._current_page_index)
+        return self._pdf_service.render_page(self._current_page_index, self._zoom_factor)
 
     def _go_to_page(self, page_index: int) -> QImage:
         previous_page_index = self._current_page_index
@@ -95,6 +113,11 @@ class ReaderService:
 
         self._save_current_progress()
         return image
+
+    def _set_zoom(self, zoom_factor: float) -> QImage:
+        self._require_document()
+        self._zoom_factor = max(MIN_ZOOM_FACTOR, min(zoom_factor, MAX_ZOOM_FACTOR))
+        return self._render_current_page()
 
     def _restored_page_index(self, document: PdfDocument) -> int:
         progress = self._progress_store.get_progress(document.document_id)

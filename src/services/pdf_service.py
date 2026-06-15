@@ -46,13 +46,14 @@ class PdfService:
             page_count=page_count,
         )
 
-    def render_page(self, page_index: int) -> QImage:
+    def render_page(self, page_index: int, zoom_factor: float = 1.0) -> QImage:
         document = self._require_document()
         self._validate_page_index(page_index)
 
         try:
             page = document.load_page(page_index)
-            matrix = fitz.Matrix(PDF_RENDER_ZOOM, PDF_RENDER_ZOOM)
+            render_zoom = PDF_RENDER_ZOOM * zoom_factor
+            matrix = fitz.Matrix(render_zoom, render_zoom)
             pixmap = page.get_pixmap(matrix=matrix, alpha=False)
         except Exception as exc:
             raise PdfReaderError(f"Could not render page: {exc}") from exc
@@ -69,6 +70,37 @@ class PdfService:
             raise PdfReaderError("The selected page could not be displayed.")
 
         return image
+
+    def get_toc(self) -> list[tuple[int, str, int]]:
+        """Return TOC entries as level, title, and zero-based page index."""
+        document = self._require_document()
+
+        try:
+            toc_entries = document.get_toc(simple=True)
+        except Exception as exc:
+            raise PdfReaderError(f"Could not read PDF table of contents: {exc}") from exc
+
+        normalized_entries: list[tuple[int, str, int]] = []
+        for level, title, page_number in toc_entries:
+            page_index = int(page_number) - 1
+            if 0 <= page_index < document.page_count:
+                normalized_entries.append((int(level), str(title).strip(), page_index))
+
+        return normalized_entries
+
+    def extract_page_text(self, page_index: int) -> str:
+        document = self._require_document()
+        self._validate_page_index(page_index)
+
+        try:
+            page = document.load_page(page_index)
+            return page.get_text("text")
+        except Exception as exc:
+            raise PdfReaderError(f"Could not extract page text: {exc}") from exc
+
+    def extract_all_page_text(self) -> dict[int, str]:
+        document = self._require_document()
+        return {page_index: self.extract_page_text(page_index) for page_index in range(document.page_count)}
 
     def close(self) -> None:
         if self._document is not None:

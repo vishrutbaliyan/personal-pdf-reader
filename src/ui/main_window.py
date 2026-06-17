@@ -30,6 +30,8 @@ from src.ui.panels.bookmarks_panel import BookmarksPanel
 from src.ui.panels.search_results_panel import SearchResultsPanel
 from src.ui.pdf_viewer import PdfViewer
 from src.ui.toolbar import ReaderToolbar
+from src.services.recent_books_service import RecentBooksService
+from src.ui.panels.recent_books_panel import RecentBooksPanel
 
 
 class MainWindow(QMainWindow):
@@ -41,18 +43,22 @@ class MainWindow(QMainWindow):
         self._reader_service = ReaderService(self._pdf_service)
         self._bookmark_service = BookmarkService()
         self._search_service = SearchService(self._pdf_service)
+        self._recent_books_service=RecentBooksService()
 
         self._toolbar = ReaderToolbar()
         self._viewer = PdfViewer()
         self._navigation_controls = NavigationControls()
         self._bookmarks_panel = BookmarksPanel()
         self._search_results_panel = SearchResultsPanel()
+        self._recent_books_panel=RecentBooksPanel()
+
 
         self._setup_window()
         self._connect_signals()
         self._load_stylesheet()
         self._refresh_toolbar()
         self._refresh_navigation_controls()
+        self._refresh_recent_books()
 
     def _setup_window(self) -> None:
         self.setWindowTitle(APP_NAME)
@@ -91,6 +97,7 @@ class MainWindow(QMainWindow):
         self._bookmarks_panel.delete_requested.connect(self._delete_bookmark)
         self._bookmarks_panel.pin_toggled_requested.connect(self._toggle_bookmark_pin)
         self._search_results_panel.page_selected.connect(self._jump_to_search_result)
+        self._recent_books_panel.book_selected.connect(self._open_recent_book)
 
     def _load_stylesheet(self) -> None:
         if LIGHT_STYLE_PATH.exists():
@@ -109,11 +116,34 @@ class MainWindow(QMainWindow):
 
         try:
             image = self._reader_service.open_document(Path(selected_file))
+            document=self._reader_service.current_document
+            if document is not None:
+                self._recent_books_service.record_opened_book(document)
             self._search_service.set_document(self._reader_service.current_document)
             self._display_page(image)
             self._refresh_bookmarks()
+            self._refresh_recent_books()
             self._toolbar.clear_search()
             self._search_results_panel.clear_results()
+        except PdfReaderError as exc:
+            self._show_error(str(exc))
+
+
+    def _open_recent_book(self, file_path: str) -> None:
+        print("OPENING:", file_path)
+
+        try:
+            image = self._reader_service.open_document(Path(file_path))
+
+            document = self._reader_service.current_document
+            if document is not None:
+                self._recent_books_service.record_opened_book(document)
+
+            self._search_service.set_document(document)
+            self._display_page(image)
+            self._refresh_bookmarks()
+            self._refresh_recent_books()
+
         except PdfReaderError as exc:
             self._show_error(str(exc))
 
@@ -262,6 +292,16 @@ class MainWindow(QMainWindow):
         bookmarks = self._bookmark_service.get_bookmarks(self._reader_service.current_document)
         self._bookmarks_panel.set_bookmarks(bookmarks)
 
+    #def _refresh_recent_books(self) -> None:
+     #       books=self._recent_books_service.get_recent_books()
+      #      self._recent_books_panel.set_recent_books(books)
+    def _refresh_recent_books(self) -> None:
+        books = self._recent_books_service.get_recent_books()
+        print("BOOKS FOUND:", len(books))
+        print(books)
+        self._recent_books_panel.set_recent_books(books)
+
+
     def _build_right_sidebar(self) -> QWidget:
         sidebar = QWidget()
         sidebar.setObjectName("RightSidebar")
@@ -271,8 +311,10 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(sidebar)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
+        layout.addWidget(self._recent_books_panel,1)
         layout.addWidget(self._bookmarks_panel, 1)
         layout.addWidget(self._search_results_panel, 1)
+       
 
         return sidebar
 
@@ -282,3 +324,5 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event: QCloseEvent) -> None:
         self._reader_service.close()
         super().closeEvent(event)
+
+        

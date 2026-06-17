@@ -10,4 +10,5 @@ STYLE_DIR = SRC_ROOT / "ui" / "styles"
 
 PROGRESS_FILE_PATH = DATA_DIR / "progress.json"
 BOOKMARKS_FILE_PATH = DATA_DIR / "bookmarks.json"
+RECENT_BOOKS_FILE_PATH = DATA_DIR / "recent_books.json"
 LIGHT_STYLE_PATH = STYLE_DIR / "light.qss"

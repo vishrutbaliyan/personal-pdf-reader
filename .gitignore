@@ -1,3 +1,5 @@
 .venv/
 __pycache__/
-*.pyc
+*.pycgit
+data/progress.json
+data/recent_books.json

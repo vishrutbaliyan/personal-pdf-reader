@@ -56,6 +56,7 @@ class RecentBooksPanel(QFrame):
 
     def _handle_item_clicked(self, item: QListWidgetItem) -> None:
         file_path = item.data(FILE_PATH_ROLE)
+        
 
         if isinstance(file_path, str):
             self.book_selected.emit(file_path)

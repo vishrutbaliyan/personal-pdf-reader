@@ -58,6 +58,7 @@ class MainWindow(QMainWindow):
         self._load_stylesheet()
         self._refresh_toolbar()
         self._refresh_navigation_controls()
+        self._refresh_recent_books()
 
     def _setup_window(self) -> None:
         self.setWindowTitle(APP_NAME)
@@ -96,7 +97,7 @@ class MainWindow(QMainWindow):
         self._bookmarks_panel.delete_requested.connect(self._delete_bookmark)
         self._bookmarks_panel.pin_toggled_requested.connect(self._toggle_bookmark_pin)
         self._search_results_panel.page_selected.connect(self._jump_to_search_result)
-       # self._recent_books_panel.book_selected.connect(self._open_recent_book)
+        self._recent_books_panel.book_selected.connect(self._open_recent_book)
 
     def _load_stylesheet(self) -> None:
         if LIGHT_STYLE_PATH.exists():
@@ -124,6 +125,25 @@ class MainWindow(QMainWindow):
             self._refresh_recent_books()
             self._toolbar.clear_search()
             self._search_results_panel.clear_results()
+        except PdfReaderError as exc:
+            self._show_error(str(exc))
+
+
+    def _open_recent_book(self, file_path: str) -> None:
+        print("OPENING:", file_path)
+
+        try:
+            image = self._reader_service.open_document(Path(file_path))
+
+            document = self._reader_service.current_document
+            if document is not None:
+                self._recent_books_service.record_opened_book(document)
+
+            self._search_service.set_document(document)
+            self._display_page(image)
+            self._refresh_bookmarks()
+            self._refresh_recent_books()
+
         except PdfReaderError as exc:
             self._show_error(str(exc))
 
@@ -272,9 +292,14 @@ class MainWindow(QMainWindow):
         bookmarks = self._bookmark_service.get_bookmarks(self._reader_service.current_document)
         self._bookmarks_panel.set_bookmarks(bookmarks)
 
+    #def _refresh_recent_books(self) -> None:
+     #       books=self._recent_books_service.get_recent_books()
+      #      self._recent_books_panel.set_recent_books(books)
     def _refresh_recent_books(self) -> None:
-            books=self._recent_books_service.get_recent_books()
-            self._recent_books_panel.set_recent_books(books)
+        books = self._recent_books_service.get_recent_books()
+        print("BOOKS FOUND:", len(books))
+        print(books)
+        self._recent_books_panel.set_recent_books(books)
 
 
     def _build_right_sidebar(self) -> QWidget:
